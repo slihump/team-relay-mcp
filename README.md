@@ -161,6 +161,20 @@ npm run typecheck
 The [`memory` transport](src/transport/memory.ts) runs the whole thing in-process
 with no Discord bot — set `"transport": "memory"` in `team.json` to try the tools.
 
+To point a local Claude Code at the built server before publishing:
+
+```json
+{
+  "mcpServers": {
+    "team-relay": {
+      "command": "node",
+      "args": ["/absolute/path/to/team-relay-mcp/dist/index.js"],
+      "env": { "TEAM_RELAY_CONFIG_DIR": "/absolute/path/to/your/project/.team-relay" }
+    }
+  }
+}
+```
+
 ## License
 
 MIT
