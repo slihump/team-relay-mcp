@@ -4,6 +4,13 @@
   "description": "An MCP server that lets teammates' separate local Claude Code sessions exchange questions, answers, and decisions through a shared chat channel — each on their own Claude subscription, no API key, no central server.",
   "type": "module",
   "license": "MIT",
+  "author": "slihump",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/slihump/team-relay-mcp.git"
+  },
+  "bugs": "https://github.com/slihump/team-relay-mcp/issues",
+  "homepage": "https://github.com/slihump/team-relay-mcp#readme",
   "keywords": [
     "mcp",
     "model-context-protocol",

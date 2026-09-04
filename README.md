@@ -1,5 +1,10 @@
 # team-relay-mcp
 
+[![CI](https://github.com/slihump/team-relay-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/slihump/team-relay-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](package.json)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-server-8A2BE2.svg)](https://modelcontextprotocol.io)
+
 An MCP server that lets a small team's **separate** Claude Code sessions ask each
 other questions, hand back answers, and share decisions — through one shared chat
 channel, with each person on their own Claude subscription.
@@ -7,16 +12,16 @@ channel, with each person on their own Claude subscription.
 No API key. No central server. No shared credentials. The relay never calls a
 model; it only moves messages in and out of a Discord channel.
 
-```
-   Alice's machine                         Bob's machine
-   Claude Code (Alice's login)             Claude Code (Bob's login)
-        │  MCP (stdio)                           │  MCP (stdio)
-   team-relay-mcp                           team-relay-mcp
-   (Alice's bot)                            (Bob's bot)
-        └───────────────┐         ┌─────────────┘
-                    shared Discord channel
-        (each message carries a signed-by-authorship payload;
-         the channel history is the source of truth)
+```mermaid
+flowchart TB
+    subgraph A["Alice's machine"]
+        CCA["Claude Code<br/>(Alice's login)"] <-->|MCP stdio| TRA["team-relay-mcp<br/>+ Alice's bot"]
+    end
+    subgraph B["Bob's machine"]
+        CCB["Claude Code<br/>(Bob's login)"] <-->|MCP stdio| TRB["team-relay-mcp<br/>+ Bob's bot"]
+    end
+    TRA <--> CH[("shared Discord channel<br/>· authorship verified per message<br/>· history is the source of truth")]
+    TRB <--> CH
 ```
 
 ## Why this exists

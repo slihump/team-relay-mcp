@@ -1,0 +1,40 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what did you get instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - discord
+        - memory
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "`team-relay-mcp doctor` output"
+      description: Redact your channel id if you'd rather not share it. Never paste a bot token.
+      render: text
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: team-relay-mcp version, Node version, OS
+      placeholder: "team-relay-mcp 1.0.0, Node 22.5.0, macOS 15"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant stderr / logs
+      description: Run with TEAM_RELAY_LOG_LEVEL=debug for more detail.
+      render: text

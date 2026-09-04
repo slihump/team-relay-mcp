@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest something for team-relay-mcp
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that team-relay-mcp doesn't support today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+      description: A tool, a config option, a transport, a behaviour change.
+  - type: checkboxes
+    id: roadmap
+    attributes:
+      label: Roadmap check
+      options:
+        - label: I've read ROADMAP.md and this isn't already listed there
+          required: true
