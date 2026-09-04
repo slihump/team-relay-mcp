@@ -5,7 +5,14 @@ import type { LocalState } from "../src/state/store.js";
 import type { RawMessage } from "../src/transport/transport.js";
 
 function state(): LocalState {
-  return { version: 1, cursor: null, conversations: {}, recordedDecisionIds: [], shownNoteIds: [] };
+  return {
+    version: 1,
+    cursor: null,
+    conversations: {},
+    decisions: {},
+    recordedDecisionIds: [],
+    shownNoteIds: [],
+  };
 }
 function raw(id: string, at = "2026-09-04T09:00:00.000Z"): RawMessage {
   return { id, author: { id: "x" }, text: "", createdAt: at };

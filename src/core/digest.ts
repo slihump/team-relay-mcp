@@ -24,6 +24,13 @@ export interface AnsweredThread {
   answers: { from: string; text: string; at: string }[];
 }
 
+export interface AwaitingReply {
+  cid: string;
+  question: string;
+  to: string[];
+  waitingHours: number;
+}
+
 export interface DeliveredNote {
   id: string;
   from: string;
@@ -36,11 +43,13 @@ export interface Digest {
   questionsForMe: OpenQuestion[];
   /** My own questions that have replies I have not acknowledged. Re-surfaces until I ack. */
   answersForMe: AnsweredThread[];
+  /** My own questions still waiting for a first reply. Informational — does not count as "needs action". */
+  awaitingReplies: AwaitingReply[];
   /** Decisions recorded by teammates that are new since the last sync. */
   newDecisions: DecisionPayload[];
   /** Broadcast notes to me / the team that have not been shown before. */
   notes: DeliveredNote[];
-  /** True when nothing above needs my attention. */
+  /** True when nothing above needs my attention (awaitingReplies does not affect this). */
   empty: boolean;
 }
 
@@ -48,8 +57,6 @@ export interface DigestInputs {
   state: LocalState;
   me: string;
   now?: Date;
-  /** Decisions collected during this sync, with the raw message id that carried them. */
-  incomingDecisions: { id: string; decision: DecisionPayload }[];
   /** Notes collected during this sync, with the raw message id that carried them. */
   incomingNotes: { id: string; note: NotePayload }[];
 }
@@ -60,11 +67,13 @@ export function computeDigest(input: DigestInputs): Digest {
 
   const questionsForMe: OpenQuestion[] = [];
   const answersForMe: AnsweredThread[] = [];
+  const awaitingReplies: AwaitingReply[] = [];
 
   for (const conv of Object.values(state.conversations)) {
     const q = conv.question;
+    const mine = namesEqual(q.from, me);
 
-    if (nameInList(me, q.to) && !namesEqual(q.from, me) && !iHaveAnswered(conv, me)) {
+    if (nameInList(me, q.to) && !mine && !iHaveAnswered(conv, me)) {
       questionsForMe.push({
         cid: q.cid,
         from: q.from,
@@ -76,7 +85,7 @@ export function computeDigest(input: DigestInputs): Digest {
       });
     }
 
-    if (namesEqual(q.from, me) && conv.answers.length > 0 && !iHaveAckedLatest(conv, me)) {
+    if (mine && conv.answers.length > 0 && !iHaveAckedLatest(conv, me)) {
       answersForMe.push({
         cid: q.cid,
         question: q.text,
@@ -84,14 +93,25 @@ export function computeDigest(input: DigestInputs): Digest {
         answers: conv.answers.map((a) => ({ from: a.from, text: a.text, at: a.ts })),
       });
     }
+
+    if (mine && conv.answers.length === 0 && conv.acks.length === 0) {
+      awaitingReplies.push({
+        cid: q.cid,
+        question: q.text,
+        to: q.to,
+        waitingHours: hoursBetween(conv.firstSeenAt, now),
+      });
+    }
   }
 
   questionsForMe.sort((a, b) => a.askedAt.localeCompare(b.askedAt));
   answersForMe.sort((a, b) => a.cid.localeCompare(b.cid));
+  awaitingReplies.sort((a, b) => b.waitingHours - a.waitingHours);
 
-  const newDecisions = input.incomingDecisions
-    .filter((d) => !state.recordedDecisionIds.includes(d.decision.did))
-    .map((d) => d.decision);
+  const recorded = new Set(state.recordedDecisionIds);
+  const newDecisions = Object.values(state.decisions)
+    .filter((d) => !recorded.has(d.did))
+    .sort((a, b) => a.ts.localeCompare(b.ts));
 
   const notes: DeliveredNote[] = input.incomingNotes
     .filter(({ id, note }) => {
@@ -105,6 +125,7 @@ export function computeDigest(input: DigestInputs): Digest {
   return {
     questionsForMe,
     answersForMe,
+    awaitingReplies,
     newDecisions,
     notes,
     empty:

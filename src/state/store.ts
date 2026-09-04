@@ -1,7 +1,12 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
-import { AckPayloadSchema, AnswerPayloadSchema, QuestionPayloadSchema } from "../core/types.js";
+import {
+  AckPayloadSchema,
+  AnswerPayloadSchema,
+  DecisionPayloadSchema,
+  QuestionPayloadSchema,
+} from "../core/types.js";
 import { log } from "../logger.js";
 
 /**
@@ -25,6 +30,9 @@ const LocalStateSchema = z.object({
   version: z.literal(1),
   cursor: z.string().nullable(),
   conversations: z.record(z.string(), StoredConversationSchema),
+  /** Decisions seen from the channel, kept so the file write can be retried until it sticks. */
+  decisions: z.record(z.string(), DecisionPayloadSchema).default({}),
+  /** Decision ids already appended to the decisions file. */
   recordedDecisionIds: z.array(z.string()),
   shownNoteIds: z.array(z.string()),
 });
@@ -36,6 +44,7 @@ function emptyState(): LocalState {
     version: 1,
     cursor: null,
     conversations: {},
+    decisions: {},
     recordedDecisionIds: [],
     shownNoteIds: [],
   };

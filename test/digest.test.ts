@@ -8,6 +8,7 @@ function baseState(): LocalState {
     version: 1,
     cursor: null,
     conversations: {},
+    decisions: {},
     recordedDecisionIds: [],
     shownNoteIds: [],
   };
@@ -54,7 +55,6 @@ describe("computeDigest", () => {
       state,
       me: "alice",
       now: new Date("2026-09-04T12:00:00.000Z"),
-      incomingDecisions: [],
       incomingNotes: [],
     });
     expect(d.questionsForMe.map((x) => x.cid)).toEqual(["c1"]);
@@ -72,8 +72,30 @@ describe("computeDigest", () => {
       firstSeenAt: "x",
       lastActivityAt: "x",
     };
-    const d = computeDigest({ state, me: "alice", incomingDecisions: [], incomingNotes: [] });
+    const d = computeDigest({ state, me: "alice", incomingNotes: [] });
     expect(d.questionsForMe).toHaveLength(0);
+  });
+
+  it("lists my own unanswered questions under awaitingReplies without flipping empty", () => {
+    const state = baseState();
+    state.conversations.c1 = {
+      cid: "c1",
+      question: q({ from: "alice", to: ["bob"], text: "ping?" }),
+      answers: [],
+      acks: [],
+      firstSeenAt: "2026-09-04T09:00:00.000Z",
+      lastActivityAt: "2026-09-04T09:00:00.000Z",
+    };
+    const d = computeDigest({
+      state,
+      me: "alice",
+      now: new Date("2026-09-04T14:00:00.000Z"),
+      incomingNotes: [],
+    });
+    expect(d.awaitingReplies.map((w) => w.cid)).toEqual(["c1"]);
+    expect(d.awaitingReplies[0]!.waitingHours).toBe(5);
+    expect(d.empty).toBe(true); // informational only
+    expect(d.questionsForMe).toHaveLength(0); // it's my own question
   });
 
   it("shows answers to my question until I ack the latest one", () => {
@@ -86,7 +108,7 @@ describe("computeDigest", () => {
       firstSeenAt: "x",
       lastActivityAt: "x",
     };
-    let d = computeDigest({ state, me: "alice", incomingDecisions: [], incomingNotes: [] });
+    let d = computeDigest({ state, me: "alice", incomingNotes: [] });
     expect(d.answersForMe.map((x) => x.cid)).toEqual(["c1"]);
 
     state.conversations.c1!.acks.push({
@@ -96,49 +118,41 @@ describe("computeDigest", () => {
       from: "alice",
       ts: "2026-09-04T10:00:00.000Z",
     });
-    d = computeDigest({ state, me: "alice", incomingDecisions: [], incomingNotes: [] });
+    d = computeDigest({ state, me: "alice", incomingNotes: [] });
     expect(d.answersForMe).toHaveLength(0);
 
     // a newer answer re-opens it
     state.conversations.c1!.answers.push(
       ans({ from: "bob", text: "actually, also DNS", ts: "2026-09-04T11:00:00.000Z" }),
     );
-    d = computeDigest({ state, me: "alice", incomingDecisions: [], incomingNotes: [] });
+    d = computeDigest({ state, me: "alice", incomingNotes: [] });
     expect(d.answersForMe).toHaveLength(1);
   });
 
   it("dedupes decisions already recorded and filters notes for me", () => {
     const state = baseState();
     state.recordedDecisionIds.push("d-old");
+    state.decisions["d-old"] = {
+      v: 1,
+      t: "decision",
+      did: "d-old",
+      from: "bob",
+      topic: "t",
+      decision: "x",
+      ts: "2026-09-04T09:00:00.000Z",
+    };
+    state.decisions["d-new"] = {
+      v: 1,
+      t: "decision",
+      did: "d-new",
+      from: "bob",
+      topic: "t2",
+      decision: "y",
+      ts: "2026-09-04T09:00:00.000Z",
+    };
     const d = computeDigest({
       state,
       me: "alice",
-      incomingDecisions: [
-        {
-          id: "m1",
-          decision: {
-            v: 1,
-            t: "decision",
-            did: "d-old",
-            from: "bob",
-            topic: "t",
-            decision: "x",
-            ts: "2026-09-04T09:00:00.000Z",
-          },
-        },
-        {
-          id: "m2",
-          decision: {
-            v: 1,
-            t: "decision",
-            did: "d-new",
-            from: "bob",
-            topic: "t2",
-            decision: "y",
-            ts: "2026-09-04T09:00:00.000Z",
-          },
-        },
-      ],
       incomingNotes: [
         {
           id: "n1",

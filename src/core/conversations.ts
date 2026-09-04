@@ -53,8 +53,12 @@ export function applyPayload(state: LocalState, payload: Payload, raw: RawMessag
       return;
     }
     case "decision":
+      // Kept in state so the decisions-file write can be retried each sync
+      // until it succeeds, even if the cursor has moved past this message.
+      state.decisions[payload.did] = payload;
+      return;
     case "note":
-      // Handled directly by the relay/digest; not part of conversation state.
+      // Ephemeral FYI — surfaced once by the digest, not part of stored state.
       return;
   }
 }

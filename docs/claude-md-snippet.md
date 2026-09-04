@@ -20,6 +20,9 @@ It reports:
 - **New team decisions** — appended to `TEAM-DECISIONS.md`. Read that file for
   shared context.
 - **Notes** — FYIs from teammates; just take them into account.
+- **Still waiting on** — questions you asked that have no reply yet. If one has
+  been waiting a long time, tell the user or `post_note` a nudge rather than
+  re-asking.
 
 **When to reach out to a teammate** (use `ask_teammate` for one person,
 `ask_team` to broadcast) — instead of guessing or asking the user to relay:

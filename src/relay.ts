@@ -4,14 +4,7 @@ import { syncDecisionsFile } from "./core/decisions.js";
 import { computeDigest, type Digest } from "./core/digest.js";
 import { conversationId, decisionId } from "./core/ids.js";
 import { decode, encode } from "./core/protocol.js";
-import {
-  type DecisionPayload,
-  nameInList,
-  nameKey,
-  namesEqual,
-  type NotePayload,
-  type Payload,
-} from "./core/types.js";
+import { nameInList, nameKey, namesEqual, type NotePayload, type Payload } from "./core/types.js";
 import { log } from "./logger.js";
 import type { Store } from "./state/store.js";
 import type { RawMessage, TeamTransport } from "./transport/transport.js";
@@ -64,7 +57,6 @@ export class Relay {
 
     let droppedUnknownSender = 0;
     let droppedSenderMismatch = 0;
-    const incomingDecisions: { id: string; decision: DecisionPayload }[] = [];
     const incomingNotes: { id: string; note: NotePayload }[] = [];
 
     this.store.mutate((state) => {
@@ -80,9 +72,7 @@ export class Relay {
         }
         if (verified === null) continue; // human chatter
 
-        if (verified.t === "decision") {
-          incomingDecisions.push({ id: msg.id, decision: verified });
-        } else if (verified.t === "note") {
+        if (verified.t === "note") {
           incomingNotes.push({ id: msg.id, note: verified });
         } else {
           applyPayload(state, verified, msg);
@@ -97,7 +87,6 @@ export class Relay {
       state: this.store.data,
       me: this.cfg.me,
       now,
-      incomingDecisions,
       incomingNotes,
     });
 

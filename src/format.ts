@@ -2,12 +2,6 @@ import type { SyncResult } from "./relay.js";
 
 /** Render a sync result as the text block the model reads in `team_sync`. */
 export function formatSync(r: SyncResult): string {
-  const scanLine = summariseScan(r);
-
-  if (r.empty) {
-    return `team_sync — nothing needs your attention right now.\n${scanLine}`;
-  }
-
   const sections: string[] = [];
 
   if (r.questionsForMe.length > 0) {
@@ -17,7 +11,7 @@ export function formatSync(r: SyncResult): string {
         indent(q.text, 4),
       ];
       if (q.context) lines.push(indent(`context: ${q.context}`, 4));
-      lines.push(`    → reply(conversation_id="${q.cid}", answer="...")`);
+      lines.push(`    -> reply(conversation_id="${q.cid}", answer="...")`);
       return lines.join("\n");
     });
     sections.push(`QUESTIONS TO ANSWER (${r.questionsForMe.length})\n${items.join("\n\n")}`);
@@ -29,7 +23,7 @@ export function formatSync(r: SyncResult): string {
       return [
         `  [${t.cid}] you asked: ${t.question}`,
         ...answerLines,
-        `    → ack(conversation_id="${t.cid}") if resolved, or reply(...) to follow up`,
+        `    -> ack(conversation_id="${t.cid}") if resolved, or reply(...) to follow up`,
       ].join("\n");
     });
     sections.push(`ANSWERS TO YOUR QUESTIONS (${r.answersForMe.length})\n${items.join("\n\n")}`);
@@ -37,20 +31,39 @@ export function formatSync(r: SyncResult): string {
 
   if (r.newDecisions.length > 0) {
     const items = r.newDecisions.map((d) => {
-      const line = `  • ${d.topic} (by ${d.from}): ${d.decision}`;
+      const line = `  - ${d.topic} (by ${d.from}): ${d.decision}`;
       return d.rationale ? `${line}\n${indent(`why: ${d.rationale}`, 4)}` : line;
     });
     sections.push(
-      `NEW TEAM DECISIONS (${r.newDecisions.length}) — appended to your decisions file\n${items.join("\n")}`,
+      `NEW TEAM DECISIONS (${r.newDecisions.length}) - appended to your decisions file\n${items.join("\n")}`,
     );
   }
 
   if (r.notes.length > 0) {
-    const items = r.notes.map((n) => `  • ${n.from}: ${n.text}`);
+    const items = r.notes.map((n) => `  - ${n.from}: ${n.text}`);
     sections.push(`NOTES (${r.notes.length})\n${items.join("\n")}`);
   }
 
-  return `team_sync — ${attentionCount(r)} thing(s) need you\n\n${sections.join("\n\n")}\n\n${scanLine}`;
+  const waiting =
+    r.awaitingReplies.length > 0
+      ? "STILL WAITING ON:\n" +
+        r.awaitingReplies
+          .map(
+            (w) =>
+              `  [${w.cid}] you asked ${w.to.join(", ")} (${w.waitingHours}h ago): ${w.question}`,
+          )
+          .join("\n")
+      : "";
+
+  const scanLine = summariseScan(r);
+
+  if (r.empty) {
+    const head = "team_sync - nothing needs your attention right now.";
+    return [head, waiting, scanLine].filter(Boolean).join("\n\n");
+  }
+
+  const head = `team_sync - ${attentionCount(r)} thing(s) need you`;
+  return [head, sections.join("\n\n"), waiting, scanLine].filter(Boolean).join("\n\n");
 }
 
 function attentionCount(r: SyncResult): number {

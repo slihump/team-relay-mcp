@@ -21,6 +21,9 @@ describe("relay end-to-end over the in-memory channel", () => {
       context: "src/api",
     });
 
+    // Alice sees her own question as still-waiting.
+    expect((await alice.sync()).awaitingReplies.map((w) => w.cid)).toEqual([cid]);
+
     // Bob sees it...
     let bobSync = await bob.sync();
     expect(bobSync.questionsForMe.map((q) => q.cid)).toEqual([cid]);
@@ -32,6 +35,9 @@ describe("relay end-to-end over the in-memory channel", () => {
 
     // Bob no longer sees it to answer.
     expect((await bob.sync()).questionsForMe).toHaveLength(0);
+
+    // Alice's "still waiting" clears once there's an answer.
+    expect((await alice.sync()).awaitingReplies).toHaveLength(0);
 
     // Alice sees the answer, repeatedly, until she acks.
     let aliceSync = await alice.sync();
