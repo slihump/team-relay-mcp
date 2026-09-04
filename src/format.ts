@@ -7,7 +7,7 @@ export function formatSync(r: SyncResult): string {
   if (r.questionsForMe.length > 0) {
     const items = r.questionsForMe.map((q) => {
       const lines = [
-        `  [${q.cid}] from ${q.from}${q.broadcast ? " (asked the whole team)" : ""} · waiting ${q.waitingHours}h`,
+        `  [${q.cid}] from ${q.from}${q.broadcast ? " (asked the whole team)" : ""} | waiting ${q.waitingHours}h`,
         indent(q.text, 4),
       ];
       if (q.context) lines.push(indent(`context: ${q.context}`, 4));
@@ -78,7 +78,7 @@ function summariseScan(r: SyncResult): string {
       `dropped ${dropped} (${r.droppedUnknownSender} unknown sender, ${r.droppedSenderMismatch} name mismatch)`,
     );
   }
-  return parts.join(" · ");
+  return parts.join(" | ");
 }
 
 function indent(text: string, spaces: number): string {
