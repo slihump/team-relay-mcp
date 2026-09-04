@@ -1,0 +1,59 @@
+{
+  "name": "team-relay-mcp",
+  "version": "1.0.0",
+  "description": "An MCP server that lets teammates' separate local Claude Code sessions exchange questions, answers, and decisions through a shared chat channel — each on their own Claude subscription, no API key, no central server.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "claude-code",
+    "discord",
+    "team",
+    "collaboration",
+    "agent"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "team-relay-mcp": "./dist/cli/main.js"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "docs/claude-md-snippet.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/cli/main.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "dependencies": {
+    "@discordjs/rest": "^2.6.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "discord-api-types": "^0.38.0",
+    "dotenv": "^17.0.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "prettier": "^3.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
