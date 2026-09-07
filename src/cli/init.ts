@@ -1,10 +1,10 @@
 import type { REST } from "@discordjs/rest";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
-import { resolveConfigDir, teamFilePath, type TeamFile } from "../config.js";
+import { existsSync } from "node:fs";
+import { teamFilePath, type TeamFile } from "../config.js";
 import { nameKey } from "../core/types.js";
 import { probeAuth, probeChannel, probeGuildTextChannels, restClient } from "./discord-probe.js";
 import { Prompt } from "./prompt.js";
+import { appendClaudeMd, mcpEntry, relPath, resolveSetupDir, writeTeamFiles } from "./setup-io.js";
 
 const NAME_RE = /^[a-z0-9][a-z0-9_-]{0,31}$/i;
 const SNOWFLAKE_RE = /^\d{15,25}$/;
@@ -18,13 +18,11 @@ export async function runInit(cwd = process.cwd()): Promise<number> {
         "authorship can be verified) and the shared channel's id. See the README, section 1.\n",
     );
 
-    const configDir = process.env.TEAM_RELAY_CONFIG_DIR
-      ? resolve(cwd, process.env.TEAM_RELAY_CONFIG_DIR)
-      : join(cwd, ".team-relay");
+    const configDir = resolveSetupDir(cwd);
     const teamPath = teamFilePath(configDir);
     if (
       existsSync(teamPath) &&
-      !(await p.confirm(`${rel(cwd, teamPath)} exists. Overwrite?`, false))
+      !(await p.confirm(`${relPath(cwd, teamPath)} exists. Overwrite?`, false))
     ) {
       console.log("Keeping the existing config.");
       return 0;
@@ -87,25 +85,18 @@ export async function runInit(cwd = process.cwd()): Promise<number> {
       transport: "discord",
     };
 
-    mkdirSync(configDir, { recursive: true });
-    writeFileSync(teamPath, `${JSON.stringify(team, null, 2)}\n`, "utf8");
-    writeFileSync(join(configDir, ".env"), `DISCORD_BOT_TOKEN=${token}\n`, "utf8");
-    console.log(`\nWrote ${rel(cwd, teamPath)} and ${rel(cwd, join(configDir, ".env"))}.`);
+    const { teamPath: written, envPath } = writeTeamFiles(configDir, team, token);
+    console.log(`\nWrote ${relPath(cwd, written)} and ${relPath(cwd, envPath)}.`);
 
-    const mcpEntry = {
-      mcpServers: {
-        "team-relay": {
-          command: "npx",
-          args: ["-y", "team-relay-mcp"],
-          env: { TEAM_RELAY_CONFIG_DIR: rel(cwd, configDir) || "." },
-        },
-      },
-    };
     console.log("\nAdd this to your project's .mcp.json:\n");
-    console.log(JSON.stringify(mcpEntry, null, 2));
+    console.log(JSON.stringify(mcpEntry(cwd, configDir), null, 2));
 
     if (await p.confirm("\nAppend the CLAUDE.md guidance snippet now?")) {
-      appendClaudeMd(cwd);
+      const result = appendClaudeMd(cwd);
+      if (result === "appended") console.log("  Appended to CLAUDE.md.");
+      else if (result === "already-present")
+        console.log("  CLAUDE.md already mentions team-relay; skipped.");
+      else console.log("  (couldn't find the snippet; copy docs/claude-md-snippet.md manually)");
     }
 
     console.log(
@@ -153,28 +144,4 @@ async function askChannelId(p: Prompt, rest: REST): Promise<string> {
     console.log("  Check the id, and that the bot was invited to that server.\n");
     if (await p.confirm("  Use it anyway?", false)) return id;
   }
-}
-
-function appendClaudeMd(cwd: string): void {
-  const snippetPath = new URL("../../docs/claude-md-snippet.md", import.meta.url);
-  let snippet: string;
-  try {
-    snippet = readFileSync(snippetPath, "utf8");
-  } catch {
-    console.log("  (couldn't find the snippet file; copy docs/claude-md-snippet.md manually)");
-    return;
-  }
-  const target = join(cwd, "CLAUDE.md");
-  const existing = existsSync(target) ? readFileSync(target, "utf8") : "";
-  if (existing.includes("team-relay")) {
-    console.log("  CLAUDE.md already mentions team-relay; skipped.");
-    return;
-  }
-  writeFileSync(target, existing ? `${existing.trimEnd()}\n\n${snippet}` : snippet, "utf8");
-  console.log(`  Appended to ${rel(cwd, target)}.`);
-}
-
-function rel(from: string, to: string): string {
-  const r = relative(from, to);
-  return r.startsWith("..") ? to : r.split("\\").join("/");
 }
