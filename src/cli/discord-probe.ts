@@ -47,7 +47,7 @@ export async function probeReadHistory(rest: REST, channelId: string): Promise<P
   } catch (err) {
     return {
       ok: false,
-      detail: `cannot read message history — grant View Channel + Read Message History (${message(err)})`,
+      detail: `cannot read message history — grant View Channels + Read Message History (${message(err)})`,
     };
   }
 }

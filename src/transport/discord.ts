@@ -41,7 +41,7 @@ export class DiscordTransport implements TeamTransport {
     } catch (err) {
       throw new Error(
         `Cannot access channel ${this.channelId}. Check the id and that the bot was invited ` +
-          `with View Channel + Read Message History + Send Messages. (${describe(err)})`,
+          `with View Channels + Read Message History + Send Messages. (${describe(err)})`,
       );
     }
     this.connected = true;

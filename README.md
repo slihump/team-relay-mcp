@@ -56,7 +56,7 @@ Every teammate runs **their own** bot so that message authorship can be verified
 2. **Bot** → enable **Message Content Intent** (under Privileged Gateway Intents).
    Required — without it you cannot read teammates' messages.
 3. **Bot** → **Reset Token** → copy it somewhere safe. This is your `DISCORD_BOT_TOKEN`.
-4. **OAuth2 → URL Generator**: scope `bot`, permissions **View Channel**,
+4. **OAuth2 → URL Generator**: scope `bot`, permissions **View Channels**,
    **Read Message History**, **Send Messages**. Open the generated URL and add the
    bot to your team's server.
 
