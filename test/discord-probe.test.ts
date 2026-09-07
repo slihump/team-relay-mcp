@@ -1,6 +1,6 @@
 import type { REST } from "@discordjs/rest";
 import { describe, expect, it } from "vitest";
-import { probeGuilds, probeGuildTextChannels } from "../src/cli/discord-probe.js";
+import { probeGuilds, probeGuildTextChannels, probeUser } from "../src/cli/discord-probe.js";
 
 /** Minimal REST stub: maps a route substring to a response or an error to throw. */
 function stub(handler: (route: string) => unknown): REST {
@@ -64,5 +64,35 @@ describe("probeGuildTextChannels", () => {
     );
     expect(res.isGuild).toBe(false);
     expect(res.channels).toEqual([]);
+  });
+});
+
+describe("probeUser", () => {
+  it("resolves a bot account", async () => {
+    const res = await probeUser(
+      stub(() => ({ id: "1546381319724859412", username: "bob-bot", bot: true })),
+      "1546381319724859412",
+    );
+    expect(res.ok).toBe(true);
+    expect(res.bot).toBe(true);
+    expect(res.username).toBe("bob-bot");
+  });
+
+  it("flags a real account that is not a bot, which could never post here", async () => {
+    const res = await probeUser(
+      stub(() => ({ id: "1", username: "a-human" })),
+      "1",
+    );
+    expect(res.ok).toBe(true);
+    expect(res.bot).toBe(false);
+  });
+
+  it("rejects an id Discord does not know, even a well-formed one", async () => {
+    const res = await probeUser(
+      stub(() => Object.assign(new Error("Unknown User"), { status: 404 })),
+      "1231546381319724859412",
+    );
+    expect(res.ok).toBe(false);
+    expect(res.detail).toContain("1231546381319724859412");
   });
 });

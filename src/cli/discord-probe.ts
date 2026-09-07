@@ -52,6 +52,36 @@ export async function probeReadHistory(rest: REST, channelId: string): Promise<P
   }
 }
 
+/**
+ * Does this id belong to a real Discord bot? Teammate ids are the last value
+ * setup still asks a human to transcribe, and `SNOWFLAKE_RE` only checks the
+ * shape — a typo of the right length sails through and then silently drops
+ * that teammate's messages at runtime as an unknown sender.
+ */
+export async function probeUser(
+  rest: REST,
+  id: string,
+): Promise<{ ok: boolean; detail: string; username?: string; bot?: boolean }> {
+  try {
+    const u = (await rest.get(Routes.user(id))) as {
+      id: string;
+      username?: string;
+      bot?: boolean;
+    };
+    const name = u.username ?? id;
+    return u.bot
+      ? { ok: true, detail: `bot "${name}"`, username: u.username, bot: true }
+      : {
+          ok: true,
+          detail: `"${name}" is a person, not a bot — the relay only ever sees bot messages`,
+          username: u.username,
+          bot: false,
+        };
+  } catch (err) {
+    return { ok: false, detail: `no Discord user with id ${id} (${message(err)})` };
+  }
+}
+
 /** The guilds this bot has been invited to. Empty is a normal, actionable state. */
 export async function probeGuilds(
   rest: REST,
@@ -100,6 +130,12 @@ export async function probeGuildTextChannels(
 
 function message(err: unknown): string {
   const e = err as { status?: number; code?: number | string; message?: string };
-  if (e?.status) return `HTTP ${e.status}${e.message ? `: ${e.message}` : ""}`;
-  return err instanceof Error ? err.message : String(err);
+  const raw = e?.status
+    ? `HTTP ${e.status}${e.message ? `: ${e.message}` : ""}`
+    : err instanceof Error
+      ? err.message
+      : String(err);
+  // Discord returns multi-line bodies for some errors; doctor prints one line
+  // per check, so collapse them rather than breaking the report's shape.
+  return raw.replace(/\s+/g, " ").trim();
 }

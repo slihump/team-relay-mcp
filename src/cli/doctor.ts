@@ -1,6 +1,12 @@
 import { ConfigError, loadConfig } from "../config.js";
 import { nameKey } from "../core/types.js";
-import { probeAuth, probeChannel, probeReadHistory, restClient } from "./discord-probe.js";
+import {
+  probeAuth,
+  probeChannel,
+  probeReadHistory,
+  probeUser,
+  restClient,
+} from "./discord-probe.js";
 
 const OK = "  ok  ";
 const BAD = " FAIL ";
@@ -78,6 +84,22 @@ export async function runDoctor(cwd = process.cwd()): Promise<number> {
   const history = await probeReadHistory(rest, cfg.channelId);
   line(history.ok ? OK : BAD, history.detail);
   if (!history.ok) failed = true;
+
+  // A teammate id is the one value nothing resolves for you. A wrong-but-
+  // well-formed one costs nothing here and silently drops their messages later.
+  for (const t of cfg.teammates) {
+    if (nameKey(t.name) === nameKey(cfg.me)) continue;
+    const who = await probeUser(rest, t.id);
+    if (!who.ok) {
+      line(BAD, `teammate "${t.name}": ${who.detail}`);
+      failed = true;
+    } else if (!who.bot) {
+      line(BAD, `teammate "${t.name}": ${who.detail}`);
+      failed = true;
+    } else {
+      line(OK, `teammate "${t.name}" is ${who.detail}`);
+    }
+  }
 
   line(
     WARN,
