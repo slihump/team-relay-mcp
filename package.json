@@ -51,6 +51,10 @@
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.0",
+    "@inquirer/confirm": "^6.3.1",
+    "@inquirer/input": "^5.1.5",
+    "@inquirer/password": "^5.2.1",
+    "@inquirer/select": "^5.2.4",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "discord-api-types": "^0.38.0",
     "dotenv": "^17.0.0",

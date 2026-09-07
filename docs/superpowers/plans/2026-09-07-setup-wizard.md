@@ -14,7 +14,7 @@
 
 - Node `>= 20` (`package.json` `engines`); local dev pinned to 24 by `.node-version`.
 - ESM only. Every relative import ends in `.js`, even from `.ts` sources.
-- Runtime dependencies stay minimal. This plan adds exactly one: `@inquirer/prompts`.
+- Runtime dependencies stay minimal. This plan adds the four prompt packages actually used — `@inquirer/input`, `@inquirer/password`, `@inquirer/select`, `@inquirer/confirm` — rather than the `@inquirer/prompts` umbrella, which pulls in six prompt types this project never calls (+25 production packages instead of +16).
 - Prettier is enforced by `npm run format:check` in CI. Run `npm run format` before committing.
 - `NAME_RE` is `/^[a-z0-9][a-z0-9_-]{0,31}$/i`; `SNOWFLAKE_RE` is `/^\d{15,25}$/`.
 - Discord invite permissions integer is `68608` (VIEW_CHANNEL 1024 + SEND_MESSAGES 2048 + READ_MESSAGE_HISTORY 65536).
