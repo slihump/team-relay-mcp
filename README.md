@@ -72,9 +72,20 @@ From your project directory:
 npx -y team-relay-mcp init
 ```
 
-It asks for your name, bot token, and the channel id, verifies the token, and
-prints **your bot's user id**. Exchange ids with your teammates and finish the
-roster (you can also edit `.team-relay/team.json` by hand later):
+On a terminal this runs a setup wizard. It asks for your name and bot token,
+then — because the token identifies your bot — it generates the invite URL for
+you and lets you **pick the server and channel from a list**, so you never have
+to copy a channel id. A review screen at the end lets you fix any answer before
+anything is written.
+
+If the bot has not been invited yet, the wizard prints a ready-made invite URL
+with the right permissions and waits. Piped or non-interactive runs fall back to
+plain prompts, which ask for the channel id directly.
+
+Setup writes `.team-relay/team.json` and `.team-relay/.env` (mode `0600`, since
+it holds your token) and prints the `.mcp.json` entry. It also shows **your bot's
+user id** — exchange ids with your teammates and finish the roster (you can also
+edit `.team-relay/team.json` by hand later):
 
 ```json
 {
