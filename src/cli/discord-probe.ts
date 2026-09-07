@@ -52,6 +52,21 @@ export async function probeReadHistory(rest: REST, channelId: string): Promise<P
   }
 }
 
+/** The guilds this bot has been invited to. Empty is a normal, actionable state. */
+export async function probeGuilds(
+  rest: REST,
+): Promise<{ ok: boolean; detail: string; guilds: { id: string; name: string }[] }> {
+  try {
+    const guilds = (await rest.get(Routes.userGuilds())) as { id: string; name?: string }[];
+    const mapped = guilds.map((g) => ({ id: g.id, name: g.name ?? g.id }));
+    return mapped.length > 0
+      ? { ok: true, detail: `in ${mapped.length} server(s)`, guilds: mapped }
+      : { ok: false, detail: "the bot has not been invited to any server yet", guilds: [] };
+  } catch (err) {
+    return { ok: false, detail: `cannot list servers (${message(err)})`, guilds: [] };
+  }
+}
+
 /**
  * Is this id a guild the bot is in? Pasting the server id instead of the channel
  * id is the easiest mistake to make — both are snowflakes and Discord answers
