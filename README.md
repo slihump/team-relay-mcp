@@ -55,14 +55,15 @@ Every teammate runs **their own** bot so that message authorship can be verified
 1. <https://discord.com/developers/applications> → **New Application**
 2. **Bot** → enable **Message Content Intent** (under Privileged Gateway Intents).
    Required — without it you cannot read teammates' messages.
-3. **Bot** → **Reset Token** → copy it somewhere safe. This is your `DISCORD_BOT_TOKEN`.
-4. **OAuth2 → URL Generator**: scope `bot`, permissions **View Channels**,
-   **Read Message History**, **Send Messages**. Open the generated URL and add the
-   bot to your team's server.
+3. **Bot** → **Reset Token** → copy it somewhere safe.
 
-One person creates a channel for the team (e.g. `#claude-relay`) and shares its
-**channel id** (right-click the channel → Copy Channel ID; enable Developer Mode
-in Discord settings if you don't see it). Everyone uses the **same channel id**.
+That is all you need from the portal. You do **not** have to visit the OAuth2 URL
+Generator or pick permissions by hand: setup builds the invite link for you, with
+the right permissions already in it.
+
+One person creates a channel for the team (e.g. `#claude-relay`) and invites
+everyone's bots to that server. Nobody needs to copy the channel id — setup lists
+the channels your bot can see and you pick one.
 
 ### 2. Run setup
 
@@ -72,20 +73,117 @@ From your project directory:
 npx -y team-relay-mcp init
 ```
 
-On a terminal this runs a setup wizard. It asks for your name and bot token,
-then — because the token identifies your bot — it generates the invite URL for
-you and lets you **pick the server and channel from a list**, so you never have
-to copy a channel id. A review screen at the end lets you fix any answer before
-anything is written.
+On a terminal this runs a wizard. Here is a whole run — the only things typed are
+a name, the token, and `bob`'s bot id:
 
-If the bot has not been invited yet, the wizard prints a ready-made invite URL
-with the right permissions and waits. Piped or non-interactive runs fall back to
-plain prompts, which ask for the channel id directly.
+```console
+$ npx -y team-relay-mcp init
+team-relay-mcp setup
 
-Setup writes `.team-relay/team.json` and `.team-relay/.env` (mode `0600`, since
-it holds your token) and prints the `.mcp.json` entry. It also shows **your bot's
-user id** — exchange ids with your teammates and finish the roster (you can also
-edit `.team-relay/team.json` by hand later):
+✔ Your name (teammates will address you by it) alice
+✔ Your Discord bot token ********************************
+  authenticated as alice-relay (1546373827578167447)
+  Server: acme-dev
+? Which channel?
+❯ #claude-relay
+  #general
+↑↓ navigate • ⏎ select
+```
+
+Pick the channel and it verifies it can read there, then shows the id to give
+your teammates:
+
+```console
+✔ Which channel? #claude-relay
+
+  Your bot's user id is 1546373827578167447
+  Share it with your teammates, and collect theirs.
+
+✔ Add a teammate? (0 added) Yes
+✔   Teammate name bob
+✔   bob's bot user id 1546381319724859412
+  Added bob — bot "bob-relay"
+✔ Add a teammate? (1 added) No
+```
+
+A teammate's bot id is the one value you still have to paste, so it is checked
+against Discord before it is accepted. A typo of the right length is refused
+here rather than silently dropping that teammate's messages later:
+
+```console
+✔   bob's bot user id 1231546381319724859412
+  no Discord user with id 1231546381319724859412 (HTTP 400: Invalid Form Body
+  user_id[NUMBER_TYPE_MAX]: snowflake value should be less than or equal to
+  9223372036854775807.)
+  Ask them to re-run `team-relay-mcp init`; it prints their bot's id.
+```
+
+Nothing is written until you approve a summary, and any answer can be redone
+from it — a typo does not mean starting over:
+
+```console
+  Your name  alice
+  Bot        alice-relay (1546373827578167447)
+  Channel    #claude-relay in acme-dev
+  Teammates  bob
+? Save this?
+❯ Save and finish
+  Change your name
+  Change bot
+  Change channel
+  Change teammates
+↑↓ navigate • ⏎ select
+```
+
+Choosing **Save and finish** writes the config and prints what to do next:
+
+```console
+Wrote .team-relay/team.json and .team-relay/.env.
+
+Add this to your project's .mcp.json:
+
+{
+  "mcpServers": {
+    "team-relay": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "team-relay-mcp"
+      ],
+      "env": {
+        "TEAM_RELAY_CONFIG_DIR": ".team-relay"
+      }
+    }
+  }
+}
+
+✔ Append the CLAUDE.md guidance snippet? Yes
+  Appended to CLAUDE.md.
+
+Next: run `team-relay-mcp doctor`, then restart Claude Code.
+```
+
+**If your bot is not in a server yet**, setup notices and hands you the invite
+link instead of sending you to the portal:
+
+```console
+  This bot is not in any server yet. Invite it:
+
+    https://discord.com/oauth2/authorize?client_id=1546373827578167447&permissions=68608&scope=bot
+
+? Done? (checks again) (Y/n)
+```
+
+Open it, add the bot to your team's server, answer `y`, and the wizard carries on.
+
+`.team-relay/.env` holds your token and is written mode `0600`. Both files are
+gitignored by this project's `.gitignore`; make sure yours ignores them too.
+
+Piped or non-interactive runs (CI, `echo | init`) fall back to plain prompts that
+ask for the channel id directly, so existing scripts keep working.
+
+You can also edit `.team-relay/team.json` by hand later — to finish the roster
+once teammates send you their bot ids:
 
 ```json
 {
@@ -102,29 +200,33 @@ edit `.team-relay/team.json` by hand later):
 
 ### 3. Wire it into Claude Code
 
-`init` prints an `.mcp.json` entry:
+Paste the `.mcp.json` entry that setup printed into your project's `.mcp.json`.
+If you answered **No** to the CLAUDE.md question, also copy
+[docs/claude-md-snippet.md](docs/claude-md-snippet.md) into your `CLAUDE.md`.
 
-```json
-{
-  "mcpServers": {
-    "team-relay": {
-      "command": "npx",
-      "args": ["-y", "team-relay-mcp"],
-      "env": { "TEAM_RELAY_CONFIG_DIR": ".team-relay" }
-    }
-  }
-}
-```
-
-Put your bot token in `.team-relay/.env` (`init` does this) **or** in the `env`
-block above. Then paste [docs/claude-md-snippet.md](docs/claude-md-snippet.md)
-into your project's `CLAUDE.md` and restart Claude Code.
+Then restart Claude Code.
 
 ### 4. Check it
 
 ```bash
 npx -y team-relay-mcp doctor
 ```
+
+```console
+[  ok  ] config: you are "alice", 2 teammate(s), transport=discord
+[  ok  ] authenticated as alice-relay (1546373827578167447)
+[  ok  ] channel found: #claude-relay
+[  ok  ] can read message history
+[  ok  ] teammate "bob" is bot "bob-relay"
+[ warn ] make sure the bot's "Message Content" intent is ON in the Developer Portal —
+         without it you cannot read teammates' messages
+
+All checks passed.
+```
+
+`doctor` re-checks every roster entry, so it also catches a `team.json` you edited
+by hand. The intent warning always prints — Discord does not expose that setting
+over the API, so it is the one thing you have to confirm in the portal yourself.
 
 ## Tools
 
