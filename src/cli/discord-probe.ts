@@ -1,5 +1,5 @@
 import { REST } from "@discordjs/rest";
-import { type APIChannel, type APIUser, Routes } from "discord-api-types/v10";
+import { type APIChannel, type APIUser, ChannelType, Routes } from "discord-api-types/v10";
 
 export interface Probe {
   ok: boolean;
@@ -49,6 +49,37 @@ export async function probeReadHistory(rest: REST, channelId: string): Promise<P
       ok: false,
       detail: `cannot read message history — grant View Channel + Read Message History (${message(err)})`,
     };
+  }
+}
+
+/**
+ * Is this id a guild the bot is in? Pasting the server id instead of the channel
+ * id is the easiest mistake to make — both are snowflakes and Discord answers
+ * 404 either way — so `init` checks for it explicitly and offers the real
+ * channels instead.
+ */
+export async function probeGuildTextChannels(
+  rest: REST,
+  guildId: string,
+): Promise<{ isGuild: boolean; name?: string; channels: { id: string; name: string }[] }> {
+  try {
+    const guild = (await rest.get(Routes.guild(guildId))) as { name?: string };
+    let channels: { id: string; name: string }[] = [];
+    try {
+      const all = (await rest.get(Routes.guildChannels(guildId))) as {
+        id: string;
+        type: number;
+        name?: string;
+      }[];
+      channels = all
+        .filter((c) => c.type === ChannelType.GuildText)
+        .map((c) => ({ id: c.id, name: c.name ?? c.id }));
+    } catch {
+      // Listing channels needs View Channel; the guild hit alone is enough to explain the mistake.
+    }
+    return { isGuild: true, name: guild.name, channels };
+  } catch {
+    return { isGuild: false, channels: [] };
   }
 }
 
