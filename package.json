@@ -49,6 +49,7 @@
     "smoke": "npm run build && node scripts/smoke.mjs",
     "package:check": "node scripts/package-smoke.mjs",
     "docker:build": "docker build --tag team-relay-mcp:test .",
+    "docker:smoke": "node scripts/docker-smoke.mjs team-relay-mcp:test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepublishOnly": "npm run build && npm test"
