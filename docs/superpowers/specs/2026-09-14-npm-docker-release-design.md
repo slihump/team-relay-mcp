@@ -26,7 +26,8 @@ trusted-publisher relationship configured on the package. The bootstrap flow
 is:
 
 1. Run all release checks locally.
-2. Sign in to npm and publish `1.0.0` once with public access and provenance.
+2. Sign in to npm and publish `1.0.0` once with public access. A local manual
+   publish cannot carry the GitHub OIDC provenance used by later releases.
 3. Configure npm Trusted Publishing for this GitHub repository and the release
    workflow file.
 4. Publish later versions from GitHub Actions with OIDC and no long-lived npm
@@ -43,10 +44,13 @@ The tarball must contain the compiled CLI, package entry point, README,
 LICENSE, and Claude guidance snippet. It must not contain source files, local
 configuration, state, credentials, test fixtures, or conversation logs.
 
-The release workflow uses Node 24 and a supported npm CLI, grants
-`id-token: write`, and runs `npm publish --access public --provenance` only
+The release workflow uses Node 24 and a supported npm CLI, disables dependency
+caching, grants `id-token: write`, and runs `npm publish --access public` only
 after formatting, type checking, tests, build, smoke test, package-content
-validation, and version/tag validation pass.
+validation, and version/tag validation pass. npm Trusted Publishing adds the
+provenance automatically. If the exact package version already exists, the npm
+job reports and skips that idempotent publish so the matching container release
+can still complete.
 
 ## Container artifact
 

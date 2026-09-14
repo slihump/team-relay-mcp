@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Release tags use `vMAJOR.MINOR.PATCH` and must match `package.json#version` after removing `v`.
-- npm publishes `team-relay-mcp` publicly with provenance.
+- npm publishes `team-relay-mcp` publicly; Trusted Publishing adds provenance automatically.
 - The container publishes as `ghcr.io/slihump/team-relay-mcp` for `linux/amd64` and `linux/arm64`.
 - The runtime container uses Node 24 Alpine, runs as a non-root user by default, and preserves the existing stdio protocol.
 - Runtime configuration, state, and decisions remain project-local through a read/write `/workspace` mount.
@@ -251,7 +251,7 @@ only `contents: read` and `id-token: write`, installs a trusted-publishing-capab
 npm 11 release, and runs:
 
 ```bash
-npm publish --access public --provenance
+npm publish --access public
 ```
 
 - [ ] **Step 4: Add the GHCR job**
@@ -308,7 +308,7 @@ npm test
 npm run build
 npm run smoke
 npm run package:check
-npm publish --access public --provenance
+npm publish --access public
 ```
 
 Then document npm Trusted Publisher configuration for repository
