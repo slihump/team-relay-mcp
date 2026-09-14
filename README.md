@@ -52,6 +52,14 @@ Discord나 Telegram에 연결하고,
 
 ## 설치
 
+> **배포 상태 (2026-09-15):** Docker `v1.0.0`은 GHCR에 공개되어 있으며
+> `linux/amd64`와 `linux/arm64`를 지원합니다. npm `team-relay-mcp@1.0.0`은
+> npm 계정의 일시적인 보안 보류가 풀리는 대로 게시할 예정입니다. 예상 게시
+> 시점은 2026-09-17 23:50 KST 이후입니다. 게시 전까지는 아래 npm 명령 대신
+> Docker 설치 방법을 사용하세요.
+
+npm 게시가 완료되면 다음 명령을 사용할 수 있습니다.
+
 ```bash
 npm install -g team-relay-mcp
 # 설치하지 않고 실행: npx -y team-relay-mcp <command>
@@ -368,7 +376,9 @@ npm run typecheck
 
 ### 유지관리자 릴리스
 
-npm 패키지는 최초 한 번만 로컬에서 등록합니다. 로컬 게시에는 GitHub OIDC
+현재 `v1.0.0` 태그와 공개 GHCR 이미지는 배포되었습니다. npm의 최초 게시만
+계정 보안 보류로 대기 중입니다. 보류가 풀리면 버전이나 태그를 새로 만들지
+말고 현재 `1.0.0`을 로컬에서 게시합니다. 로컬 게시에는 GitHub OIDC
 provenance가 붙지 않으며, 이후 태그 릴리스에는 자동으로 붙습니다.
 
 ```bash
@@ -382,8 +392,9 @@ npm run package:check
 npm publish --access public
 ```
 
-게시 후 npm의 `team-relay-mcp` 패키지 설정에서 Trusted Publisher를 다음과 같이
-등록합니다.
+`team-relay-mcp@1.0.0` 게시를 확인한 뒤 npm 패키지 설정에서 Trusted
+Publisher를 다음과 같이 등록하고, 실패했던 `v1.0.0` 릴리스의 npm 작업을
+재실행해 설정을 검증합니다.
 
 - Organization or user: `slihump`
 - Repository: `team-relay-mcp`
@@ -403,9 +414,10 @@ git push origin main
 git push origin v1.0.1
 ```
 
-첫 GHCR 게시 후 GitHub의 패키지 설정에서 이미지 visibility를 **Public**으로
-변경하세요. 워크플로는 이미 npm에 존재하는 동일 버전은 건너뛰므로, 수동으로
-게시한 `1.0.0` 태그를 푸시해 최초 GHCR 이미지를 만들 수 있습니다.
+GHCR `v1.0.0`은 이미 **Public**이며 익명 pull과 원격 이미지 MCP 스모크
+테스트를 통과했습니다. 게시된 이미지와 태그는
+[GitHub Packages](https://github.com/slihump/team-relay-mcp/pkgs/container/team-relay-mcp)에서
+확인할 수 있습니다.
 
 ## 라이선스
 
@@ -453,6 +465,14 @@ usually off and makes sure nothing is lost when they come back.
 `team_sync`. See [ROADMAP.md](ROADMAP.md).
 
 ## Install
+
+> **Release status (2026-09-15):** Docker `v1.0.0` is public on GHCR for
+> `linux/amd64` and `linux/arm64`. npm `team-relay-mcp@1.0.0` will be published
+> after a temporary npm account security hold expires, expected after
+> 2026-09-17 23:50 KST. Use the Docker installation below until the initial npm
+> publication is available.
+
+After the npm publication completes, these commands will be available:
 
 ```bash
 npm install -g team-relay-mcp
@@ -762,8 +782,11 @@ To point a local Claude Code at the built server before publishing:
 
 ### Maintainer releases
 
-Bootstrap the npm package once from a maintainer machine. A local publish does
-not carry GitHub OIDC provenance; later tagged releases add it automatically.
+The `v1.0.0` tag and public GHCR image have been released. Only the initial npm
+publication is waiting for the account security hold to expire. When it does,
+publish the existing `1.0.0` without creating another version or tag. A local
+publish does not carry GitHub OIDC provenance; later tagged releases add it
+automatically.
 
 ```bash
 npm login
@@ -776,8 +799,9 @@ npm run package:check
 npm publish --access public
 ```
 
-After publishing, add a Trusted Publisher in the npm settings for
-`team-relay-mcp`:
+After confirming `team-relay-mcp@1.0.0` on npm, add a Trusted Publisher in the
+package settings and rerun the failed npm job from the `v1.0.0` release to
+verify the configuration:
 
 - Organization or user: `slihump`
 - Repository: `team-relay-mcp`
@@ -797,10 +821,9 @@ git push origin main
 git push origin v1.0.1
 ```
 
-After the first GHCR publish, change the image visibility to **Public** in the
-GitHub package settings. The workflow skips an identical version already on
-npm, so pushing the manually published `v1.0.0` tag can create the initial GHCR
-image.
+GHCR `v1.0.0` is already **Public** and has passed an anonymous pull and a remote
+image MCP smoke test. View its published tags in
+[GitHub Packages](https://github.com/slihump/team-relay-mcp/pkgs/container/team-relay-mcp).
 
 ## License
 
