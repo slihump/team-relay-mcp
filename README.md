@@ -57,6 +57,60 @@ npm install -g team-relay-mcp
 # 설치하지 않고 실행: npx -y team-relay-mcp <command>
 ```
 
+### Docker로 실행
+
+이미지는 `ghcr.io/slihump/team-relay-mcp`에 게시됩니다. MCP는 stdio를
+사용하므로 컨테이너를 실행할 때 `-i`가 필요하며, 상태 파일과 결정 로그를
+저장할 수 있도록 프로젝트를 `/workspace`에 읽기/쓰기 방식으로 마운트해야
+합니다.
+
+```bash
+docker pull ghcr.io/slihump/team-relay-mcp:1
+
+# 설정 마법사
+docker run --rm -it \
+  --user "$(id -u):$(id -g)" \
+  --mount type=bind,source="$PWD",target=/workspace \
+  ghcr.io/slihump/team-relay-mcp:1 init
+
+# 연결 진단
+docker run --rm -i \
+  --user "$(id -u):$(id -g)" \
+  --mount type=bind,source="$PWD",target=/workspace \
+  --env-file "$PWD/.team-relay/.env" \
+  ghcr.io/slihump/team-relay-mcp:1 doctor
+```
+
+Claude Code에서 컨테이너를 MCP 서버로 실행하려면 아래의 프로젝트 절대 경로와
+Linux UID/GID를 자신의 값으로 바꾸세요. UID/GID는 `id -u`와 `id -g`로 확인할
+수 있습니다. Docker Desktop(macOS/Windows)에서 마운트 권한 문제가 없다면
+`--user`, `1000:1000` 두 항목을 빼도 됩니다.
+
+```json
+{
+  "mcpServers": {
+    "team-relay": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--user",
+        "1000:1000",
+        "--mount",
+        "type=bind,source=/absolute/path/to/project,target=/workspace",
+        "--env-file",
+        "/absolute/path/to/project/.team-relay/.env",
+        "ghcr.io/slihump/team-relay-mcp:1"
+      ]
+    }
+  }
+}
+```
+
+로컬 이미지는 저장소 루트에서 `npm run docker:build`로 만들며 이름은
+`team-relay-mcp:test`입니다.
+
 ### 1. Discord 봇 만들기(팀원마다 한 번씩)
 
 메시지 작성자를 검증할 수 있도록 팀원마다 **자신만의** 봇을 실행합니다.
@@ -311,6 +365,47 @@ npm run typecheck
 }
 ```
 
+### 유지관리자 릴리스
+
+npm 패키지는 최초 한 번만 로컬에서 등록합니다. 로컬 게시에는 GitHub OIDC
+provenance가 붙지 않으며, 이후 태그 릴리스에는 자동으로 붙습니다.
+
+```bash
+npm login
+npm run format:check
+npm run typecheck
+npm test
+npm run build
+npm run smoke
+npm run package:check
+npm publish --access public
+```
+
+게시 후 npm의 `team-relay-mcp` 패키지 설정에서 Trusted Publisher를 다음과 같이
+등록합니다.
+
+- Organization or user: `slihump`
+- Repository: `team-relay-mcp`
+- Workflow filename: `release.yml`
+- Allowed actions: `npm publish` 허용
+
+OIDC 게시가 확인되면 npm의 Publishing access를 **Require two-factor
+authentication and disallow tokens**로 변경할 수 있습니다. 다음 릴리스부터
+버전을 올리고 동일한 버전 태그를 푸시하면 npm과 GHCR이 함께 게시됩니다.
+
+```bash
+npm version patch --no-git-tag-version
+git add package.json package-lock.json
+git commit -m "chore(release): 1.0.1"
+git tag -a v1.0.1 -m "v1.0.1"
+git push origin main
+git push origin v1.0.1
+```
+
+첫 GHCR 게시 후 GitHub의 패키지 설정에서 이미지 visibility를 **Public**으로
+변경하세요. 워크플로는 이미 npm에 존재하는 동일 버전은 건너뛰므로, 수동으로
+게시한 `1.0.0` 태그를 푸시해 최초 GHCR 이미지를 만들 수 있습니다.
+
 ## 라이선스
 
 MIT
@@ -362,6 +457,59 @@ usually off and makes sure nothing is lost when they come back.
 npm install -g team-relay-mcp
 # or run without installing: npx -y team-relay-mcp <command>
 ```
+
+### Run with Docker
+
+Images are published at `ghcr.io/slihump/team-relay-mcp`. MCP uses stdio, so
+the container needs `-i`, and the project must be mounted read/write at
+`/workspace` so the relay can persist state and the decision log.
+
+```bash
+docker pull ghcr.io/slihump/team-relay-mcp:1
+
+# Setup wizard
+docker run --rm -it \
+  --user "$(id -u):$(id -g)" \
+  --mount type=bind,source="$PWD",target=/workspace \
+  ghcr.io/slihump/team-relay-mcp:1 init
+
+# Connection diagnostics
+docker run --rm -i \
+  --user "$(id -u):$(id -g)" \
+  --mount type=bind,source="$PWD",target=/workspace \
+  --env-file "$PWD/.team-relay/.env" \
+  ghcr.io/slihump/team-relay-mcp:1 doctor
+```
+
+To run the container as a Claude Code MCP server, replace the absolute project
+paths and Linux UID/GID below with your values. Find them with `id -u` and
+`id -g`. On Docker Desktop (macOS/Windows), you can remove `--user` and
+`1000:1000` when bind-mount permissions do not require them.
+
+```json
+{
+  "mcpServers": {
+    "team-relay": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--user",
+        "1000:1000",
+        "--mount",
+        "type=bind,source=/absolute/path/to/project,target=/workspace",
+        "--env-file",
+        "/absolute/path/to/project/.team-relay/.env",
+        "ghcr.io/slihump/team-relay-mcp:1"
+      ]
+    }
+  }
+}
+```
+
+Build a local image from the repository root with `npm run docker:build`; its
+name is `team-relay-mcp:test`.
 
 ### 1. Create your Discord bot (each teammate does this once)
 
@@ -608,6 +756,48 @@ To point a local Claude Code at the built server before publishing:
   }
 }
 ```
+
+### Maintainer releases
+
+Bootstrap the npm package once from a maintainer machine. A local publish does
+not carry GitHub OIDC provenance; later tagged releases add it automatically.
+
+```bash
+npm login
+npm run format:check
+npm run typecheck
+npm test
+npm run build
+npm run smoke
+npm run package:check
+npm publish --access public
+```
+
+After publishing, add a Trusted Publisher in the npm settings for
+`team-relay-mcp`:
+
+- Organization or user: `slihump`
+- Repository: `team-relay-mcp`
+- Workflow filename: `release.yml`
+- Allowed actions: allow `npm publish`
+
+After verifying OIDC publication, npm Publishing access can be changed to
+**Require two-factor authentication and disallow tokens**. For later releases,
+bump the version and push the matching tag to publish npm and GHCR together:
+
+```bash
+npm version patch --no-git-tag-version
+git add package.json package-lock.json
+git commit -m "chore(release): 1.0.1"
+git tag -a v1.0.1 -m "v1.0.1"
+git push origin main
+git push origin v1.0.1
+```
+
+After the first GHCR publish, change the image visibility to **Public** in the
+GitHub package settings. The workflow skips an identical version already on
+npm, so pushing the manually published `v1.0.0` tag can create the initial GHCR
+image.
 
 ## License
 
