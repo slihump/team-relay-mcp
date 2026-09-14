@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmExecPath = process.env.npm_execpath;
 const required = new Set([
   "LICENSE",
   "README.md",
@@ -25,6 +25,12 @@ function run(command, args, options = {}) {
     stdio: ["ignore", "pipe", "pipe"],
     ...options,
   });
+}
+
+function runNpm(args, options = {}) {
+  if (npmExecPath) return run(process.execPath, [npmExecPath, ...args], options);
+  if (process.platform !== "win32") return run("npm", args, options);
+  throw new Error("run this check through `npm run package:check` on Windows");
 }
 
 function packResult(stdout, operation) {
@@ -45,7 +51,7 @@ function isolatedNpmEnv(userconfig) {
 }
 
 const dryRun = packResult(
-  run(npm, ["pack", "--dry-run", "--json", "--ignore-scripts"]),
+  runNpm(["pack", "--dry-run", "--json", "--ignore-scripts"]),
   "npm pack --dry-run",
 );
 const paths = new Set(dryRun.files.map((file) => file.path));
@@ -67,7 +73,7 @@ try {
   const cleanNpmConfig = join(temp, "empty.npmrc");
   writeFileSync(cleanNpmConfig, "");
   const packed = packResult(
-    run(npm, ["pack", "--json", "--ignore-scripts", "--pack-destination", temp]),
+    runNpm(["pack", "--json", "--ignore-scripts", "--pack-destination", temp]),
     "npm pack",
   );
   const tarball = join(temp, packed.filename);
@@ -77,7 +83,7 @@ try {
     join(consumer, "package.json"),
     JSON.stringify({ name: "team-relay-package-smoke", private: true }),
   );
-  run(npm, ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], {
+  runNpm(["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], {
     cwd: consumer,
     env: isolatedNpmEnv(cleanNpmConfig),
   });
