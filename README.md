@@ -5,6 +5,322 @@
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](package.json)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-server-8A2BE2.svg)](https://modelcontextprotocol.io)
 
+<details>
+<summary><strong>🇰🇷 한국어 README 펼쳐보기</strong></summary>
+
+## 한국어
+
+소규모 팀의 **서로 분리된** Claude Code 세션이 하나의 공유 채팅 채널을
+통해 서로 질문하고, 답변을 전달하고, 결정을 공유할 수 있게 해 주는 MCP
+서버입니다. 각 팀원은 자신의 Claude 구독을 사용합니다.
+
+API 키도, 중앙 서버도, 공유 자격 증명도 필요하지 않습니다. 릴레이는 모델을
+호출하지 않고 Discord 채널에서 메시지를 가져오고 내보내기만 합니다.
+
+```mermaid
+flowchart TB
+    subgraph A["Alice의 컴퓨터"]
+        CCA["Claude Code<br/>(Alice의 로그인)"] <-->|MCP stdio| TRA["team-relay-mcp<br/>+ Alice의 봇"]
+    end
+    subgraph B["Bob의 컴퓨터"]
+        CCB["Claude Code<br/>(Bob의 로그인)"] <-->|MCP stdio| TRB["team-relay-mcp<br/>+ Bob의 봇"]
+    end
+    TRA <--> CH[("공유 Discord 채널<br/>· 메시지별 작성자 검증<br/>· 기록이 최종 기준")]
+    TRB <--> CH
+```
+
+## 만든 이유
+
+2026년의 Claude Code에는 개인을 위한 좋은 구성 요소가 있습니다.
+[Channels](https://code.claude.com/docs/en/channels-reference)는 하나의 세션을
+Discord나 Telegram에 연결하고,
+[cross-session messaging](https://code.claude.com/docs/en/cross-session-messaging)은
+**한 컴퓨터**에 있는 세션들을 연결합니다.
+[Agent Teams](https://docs.claude.com/en/docs/claude-code/agent-teams)는 한
+사람의 에이전트들을 연결하고,
+[Remote Control](https://code.claude.com/docs/en/remote-control)은 다른
+기기에서 자신의 세션을 제어합니다. 하지만 이들 중 어느 것도 **서로 다른
+구독을 사용하는 두 사람**을 연결하지 않습니다. `team-relay-mcp`는 이 빈틈을
+채웁니다.
+
+`team-relay-mcp`는 팀원 간 질의응답과 공유 결정 기록이라는 한 가지 역할만
+수행하는 얇은 계층입니다. **비동기 우선**으로 설계되어 세션이 대부분 꺼져
+있다고 가정하고, 다시 시작했을 때 어떤 메시지도 잃지 않도록 합니다.
+
+**실시간 도구는 아닙니다.** v1은 Claude가 `team_sync`를 호출할 때 채널
+기록을 폴링합니다. 자세한 내용은 [ROADMAP.md](ROADMAP.md)를 참고하세요.
+
+## 설치
+
+```bash
+npm install -g team-relay-mcp
+# 설치하지 않고 실행: npx -y team-relay-mcp <command>
+```
+
+### 1. Discord 봇 만들기(팀원마다 한 번씩)
+
+메시지 작성자를 검증할 수 있도록 팀원마다 **자신만의** 봇을 실행합니다.
+하나의 봇을 공유하면 누가 어떤 메시지를 보냈는지 구분할 수 없습니다.
+
+1. <https://discord.com/developers/applications> → **New Application**
+2. **Bot** → Privileged Gateway Intents 아래의 **Message Content Intent**를
+   활성화합니다. 이 설정이 없으면 팀원의 메시지를 읽을 수 없습니다.
+3. **Bot** → **Reset Token** → 토큰을 복사해 안전한 곳에 보관합니다.
+
+포털에서 해야 할 일은 이것뿐입니다. OAuth2 URL Generator를 방문하거나
+권한을 직접 선택할 필요가 없습니다. 설정 마법사가 올바른 권한이 포함된 초대
+링크를 만들어 줍니다.
+
+팀원 중 한 명이 팀용 채널(예: `#claude-relay`)을 만들고 모든 팀원의 봇을
+서버에 초대합니다. 채널 ID를 복사할 필요는 없습니다. 설정 마법사가 봇이 볼
+수 있는 채널을 보여 주며, 그중 하나를 선택하면 됩니다.
+
+### 2. 설정 실행
+
+프로젝트 디렉터리에서 다음을 실행합니다.
+
+```bash
+npx -y team-relay-mcp init
+```
+
+터미널에서는 설정 마법사가 실행됩니다. 아래는 전체 실행 예시이며, 직접
+입력하는 값은 이름, 토큰, `bob`의 봇 ID뿐입니다.
+
+```console
+$ npx -y team-relay-mcp init
+team-relay-mcp setup
+
+✔ Your name (teammates will address you by it) alice
+✔ Your Discord bot token ********************************
+  authenticated as alice-relay (1546373827578167447)
+  Server: acme-dev
+? Which channel?
+❯ #claude-relay
+  #general
+↑↓ navigate • ⏎ select
+```
+
+채널을 선택하면 읽기 권한을 확인한 뒤 팀원에게 전달할 봇 ID를 표시합니다.
+
+```console
+✔ Which channel? #claude-relay
+
+  Your bot's user id is 1546373827578167447
+  Share it with your teammates, and collect theirs.
+
+✔ Add a teammate? (0 added) Yes
+✔   Teammate name bob
+✔   bob's bot user id 1546381319724859412
+  Added bob — bot "bob-relay"
+✔ Add a teammate? (1 added) No
+```
+
+팀원의 봇 ID는 여전히 직접 붙여 넣어야 하는 유일한 값이므로, 입력 즉시
+Discord에서 유효성을 확인합니다. 길이만 맞는 오타도 여기에서 거부되므로
+나중에 해당 팀원의 메시지가 조용히 누락되는 일을 막을 수 있습니다.
+
+```console
+✔   bob's bot user id 1231546381319724859412
+  no Discord user with id 1231546381319724859412 (HTTP 400: Invalid Form Body
+  user_id[NUMBER_TYPE_MAX]: snowflake value should be less than or equal to
+  9223372036854775807.)
+  Ask them to re-run `team-relay-mcp init`; it prints their bot's id.
+```
+
+요약을 승인하기 전에는 아무 파일도 기록하지 않습니다. 요약 화면에서 모든
+답변을 다시 입력할 수 있으므로 오타가 나도 처음부터 시작할 필요가 없습니다.
+
+```console
+  Your name  alice
+  Bot        alice-relay (1546373827578167447)
+  Channel    #claude-relay in acme-dev
+  Teammates  bob
+? Save this?
+❯ Save and finish
+  Change your name
+  Change bot
+  Change channel
+  Change teammates
+↑↓ navigate • ⏎ select
+```
+
+**Save and finish**를 선택하면 설정 파일을 기록하고 다음 단계를 안내합니다.
+
+```console
+Wrote .team-relay/team.json and .team-relay/.env.
+
+Add this to your project's .mcp.json:
+
+{
+  "mcpServers": {
+    "team-relay": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "team-relay-mcp"
+      ],
+      "env": {
+        "TEAM_RELAY_CONFIG_DIR": ".team-relay"
+      }
+    }
+  }
+}
+
+✔ Append the CLAUDE.md guidance snippet? Yes
+  Appended to CLAUDE.md.
+
+Next: run `team-relay-mcp doctor`, then restart Claude Code.
+```
+
+**봇이 아직 서버에 들어가 있지 않다면** 설정 마법사가 이를 감지하고,
+포털로 보내는 대신 초대 링크를 제공합니다.
+
+```console
+  This bot is not in any server yet. Invite it:
+
+    https://discord.com/oauth2/authorize?client_id=1546373827578167447&permissions=68608&scope=bot
+
+? Done? (checks again) (Y/n)
+```
+
+링크를 열어 봇을 팀 서버에 추가하고 `y`를 입력하면 설정이 계속됩니다.
+
+`.team-relay/.env`에는 봇 토큰이 저장되며 파일 모드는 `0600`으로
+설정됩니다. 이 프로젝트의 `.gitignore`에는 두 설정 파일이 모두 포함되어
+있습니다. 자신의 프로젝트에서도 반드시 두 파일을 무시하도록 설정하세요.
+
+파이프 입력이나 비대화형 실행(CI, `echo | init`)에서는 채널 ID를 직접 묻는
+일반 프롬프트로 전환되므로 기존 스크립트도 계속 작동합니다.
+
+팀원에게 봇 ID를 받은 뒤 명단을 완성하려면 `.team-relay/team.json`을 직접
+편집해도 됩니다.
+
+```json
+{
+  "me": "alice",
+  "channelId": "1234567890",
+  "teammates": [
+    { "name": "alice", "id": "111111111111111111" },
+    { "name": "bob", "id": "222222222222222222" }
+  ],
+  "decisionsFile": "TEAM-DECISIONS.md",
+  "transport": "discord"
+}
+```
+
+### 3. Claude Code에 연결
+
+설정 마법사가 출력한 `.mcp.json` 항목을 프로젝트의 `.mcp.json`에
+붙여 넣습니다. CLAUDE.md 질문에서 **No**를 선택했다면
+[docs/claude-md-snippet.md](docs/claude-md-snippet.md)의 내용도 `CLAUDE.md`에
+복사합니다.
+
+그런 다음 Claude Code를 다시 시작합니다.
+
+### 4. 상태 확인
+
+```bash
+npx -y team-relay-mcp doctor
+```
+
+```console
+[  ok  ] config: you are "alice", 2 teammate(s), transport=discord
+[  ok  ] authenticated as alice-relay (1546373827578167447)
+[  ok  ] channel found: #claude-relay
+[  ok  ] can read message history
+[  ok  ] teammate "bob" is bot "bob-relay"
+[ warn ] make sure the bot's "Message Content" intent is ON in the Developer Portal —
+         without it you cannot read teammates' messages
+
+All checks passed.
+```
+
+`doctor`는 명단의 모든 항목을 다시 확인하므로 직접 편집한 `team.json`의
+오류도 찾아냅니다. Intent 경고는 항상 표시됩니다. Discord API로는 해당
+설정을 확인할 수 없기 때문에 이 한 가지 항목만은 포털에서 직접 확인해야
+합니다.
+
+## 도구
+
+| 도구                                           | 용도                                                                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `team_sync`                                    | 동기화: 답변할 질문, 내가 한 질문의 답변, 새 결정과 메모를 확인합니다. 세션 시작 시와 각 작업 단위가 끝날 때 호출합니다. |
+| `ask_teammate(to, question, context?)`         | 특정 팀원이나 그 팀원의 로컬 코드만 답할 수 있는 내용을 질문합니다.                                                      |
+| `ask_team(question, context?)`                 | 모든 팀원에게 질문을 보냅니다.                                                                                           |
+| `reply(conversation_id, answer)`               | 팀원의 질문에 답변합니다.                                                                                                |
+| `ack(conversation_id, note?)`                  | 내가 한 질문의 답변을 해결된 것으로 표시하여 다시 나타나지 않게 합니다.                                                  |
+| `record_decision(topic, decision, rationale?)` | 결정을 기록합니다. 모든 팀원의 `TEAM-DECISIONS.md`에 반영됩니다.                                                         |
+| `post_note(text, to?)`                         | 답변이 필요 없는 참고 메시지를 보냅니다.                                                                                 |
+
+## 안정성을 유지하는 방식
+
+- **채널이 최종 기준입니다.** 각 컴퓨터에는 커서와 처리한 항목만
+  `.team-relay/state.json`에 저장됩니다. 이 파일을 잃어도 다음 `team_sync`가
+  채널 기록을 바탕으로 상태를 복원합니다.
+- **어떤 메시지도 한 번만 전달된 뒤 사라지지 않습니다.** 나에게 온 질문은
+  `reply`할 때까지 모든 `team_sync`에 다시 나타나며, 내가 한 질문의 답변은
+  `ack`할 때까지 다시 나타납니다.
+- **작성자를 검증합니다.** 모든 팀원은 자신의 봇으로 메시지를 전송합니다.
+  Discord 작성자가 명단에 없거나 페이로드의 `from` 값이 해당 작성자와
+  일치하지 않으면 수신 메시지를 버립니다. `team_sync`는 버린 메시지 수를
+  보고합니다.
+
+## 보안과 개인정보 보호
+
+- 릴레이된 메시지는 **신뢰할 수 없는 입력**입니다. CLAUDE.md 안내문은
+  Claude가 이를 지시가 아니라 정보로 취급하고, 코드를 보내거나 릴레이된
+  요청에 따라 행동하기 전에 사용자에게 확인하도록 합니다.
+- 릴레이에 게시된 모든 내용은 Discord 채널 기록에 무기한 저장됩니다.
+  비밀 정보를 전달하지 마세요.
+- 봇 토큰은 해당 채널에 대한 전체 접근 권한을 부여합니다.
+  `.team-relay/.env`를 Git에 포함하지 말고(제공되는 `.gitignore`가 이를
+  처리합니다), 다른 사람과 공유하지 마세요.
+
+## 제한 사항
+
+- **실시간이 아닙니다**(v1). `team_sync`는 폴링 방식입니다.
+- **이름으로 라우팅합니다.** 명단에서 이름은 대소문자를 구분하지 않고
+  고유해야 합니다.
+- **Discord만 지원합니다**(v1).
+
+## 개발
+
+```bash
+npm install
+npm test           # 단위 + 통합 테스트, Discord 불필요
+npm run smoke      # 빌드 후 stdio를 통해 MCP 서버 실행
+npm run typecheck
+```
+
+[`memory` transport](src/transport/memory.ts)는 Discord 봇 없이 모든 기능을
+한 프로세스에서 실행합니다. 도구를 사용해 보려면 `team.json`에서
+`"transport": "memory"`로 설정하세요.
+
+패키지를 게시하기 전에 로컬 Claude Code에서 빌드한 서버를 사용하려면 다음과
+같이 설정합니다.
+
+```json
+{
+  "mcpServers": {
+    "team-relay": {
+      "command": "node",
+      "args": ["/absolute/path/to/team-relay-mcp/dist/index.js"],
+      "env": { "TEAM_RELAY_CONFIG_DIR": "/absolute/path/to/your/project/.team-relay" }
+    }
+  }
+}
+```
+
+## 라이선스
+
+MIT
+
+</details>
+
+---
+
+## English
+
 An MCP server that lets a small team's **separate** Claude Code sessions ask each
 other questions, hand back answers, and share decisions — through one shared chat
 channel, with each person on their own Claude subscription.
