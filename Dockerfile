@@ -18,6 +18,7 @@ COPY --from=build --chown=node:node /app/package.json /app/package-lock.json /ap
 COPY --from=build --chown=node:node /app/node_modules /app/node_modules
 COPY --from=build --chown=node:node /app/dist /app/dist
 COPY --chown=node:node README.md LICENSE /app/
+COPY --chown=node:node docs/claude-md-snippet.md /app/docs/claude-md-snippet.md
 
 USER node
 

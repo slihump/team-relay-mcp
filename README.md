@@ -81,10 +81,11 @@ docker run --rm -i \
   ghcr.io/slihump/team-relay-mcp:1 doctor
 ```
 
-Claude Code에서 컨테이너를 MCP 서버로 실행하려면 아래의 프로젝트 절대 경로와
-Linux UID/GID를 자신의 값으로 바꾸세요. UID/GID는 `id -u`와 `id -g`로 확인할
-수 있습니다. Docker Desktop(macOS/Windows)에서 마운트 권한 문제가 없다면
-`--user`, `1000:1000` 두 항목을 빼도 됩니다.
+설정 마법사는 설치 방식과 관계없이 마지막에 npm용 `npx` 설정을 출력합니다.
+Docker로 사용할 때는 그 출력을 붙여 넣지 말고 아래 Docker 설정을 사용하세요.
+프로젝트 절대 경로와 Linux UID/GID는 자신의 값으로 바꿔야 합니다. UID/GID는
+`id -u`와 `id -g`로 확인할 수 있습니다. Docker Desktop(macOS/Windows)에서
+마운트 권한 문제가 없다면 `--user`, `1000:1000` 두 항목을 빼도 됩니다.
 
 ```json
 {
@@ -481,10 +482,12 @@ docker run --rm -i \
   ghcr.io/slihump/team-relay-mcp:1 doctor
 ```
 
-To run the container as a Claude Code MCP server, replace the absolute project
-paths and Linux UID/GID below with your values. Find them with `id -u` and
-`id -g`. On Docker Desktop (macOS/Windows), you can remove `--user` and
-`1000:1000` when bind-mount permissions do not require them.
+The setup wizard always prints an npm-based `npx` configuration at the end,
+regardless of how it was installed. When using Docker, ignore that output and
+use the Docker configuration below. Replace the absolute project paths and
+Linux UID/GID with your values; find them with `id -u` and `id -g`. On Docker
+Desktop (macOS/Windows), you can remove `--user` and `1000:1000` when
+bind-mount permissions do not require them.
 
 ```json
 {

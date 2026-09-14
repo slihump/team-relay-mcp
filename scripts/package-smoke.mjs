@@ -82,13 +82,8 @@ try {
     env: isolatedNpmEnv(cleanNpmConfig),
   });
 
-  const binary = join(
-    consumer,
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "team-relay-mcp.cmd" : "team-relay-mcp",
-  );
-  const help = run(binary, ["--help"], { cwd: consumer });
+  const cli = join(consumer, "node_modules", "team-relay-mcp", "dist", "cli", "main.js");
+  const help = run(process.execPath, [cli, "--help"], { cwd: consumer });
   if (!help.includes("a relay for teammates' separate Claude Code sessions")) {
     throw new Error("installed CLI did not print the expected help text");
   }
