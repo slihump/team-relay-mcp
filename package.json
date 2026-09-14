@@ -9,7 +9,9 @@
     "type": "git",
     "url": "git+https://github.com/slihump/team-relay-mcp.git"
   },
-  "bugs": "https://github.com/slihump/team-relay-mcp/issues",
+  "bugs": {
+    "url": "https://github.com/slihump/team-relay-mcp/issues"
+  },
   "homepage": "https://github.com/slihump/team-relay-mcp#readme",
   "keywords": [
     "mcp",
@@ -25,7 +27,7 @@
     "node": ">=20"
   },
   "bin": {
-    "team-relay-mcp": "./dist/cli/main.js"
+    "team-relay-mcp": "dist/cli/main.js"
   },
   "main": "./dist/index.js",
   "exports": {
@@ -45,6 +47,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "npm run build && node scripts/smoke.mjs",
+    "package:check": "node scripts/package-smoke.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepublishOnly": "npm run build && npm test"
@@ -66,5 +69,10 @@
     "tsx": "^4.19.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "types": "./dist/index.d.ts"
 }
