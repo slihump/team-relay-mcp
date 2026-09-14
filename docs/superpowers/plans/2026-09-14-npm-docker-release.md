@@ -26,10 +26,12 @@
 ### Task 1: Verify the npm artifact as a real consumer
 
 **Files:**
+
 - Create: `scripts/package-smoke.mjs`
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Consumes: existing `npm run build` output and `package.json#files`/`bin`
 - Produces: `npm run package:check`, which validates contents, installs the tarball in a temporary project, and executes its CLI
 
@@ -85,11 +87,13 @@ git commit -m "build: verify the published npm package"
 ### Task 2: Build a minimal non-root Docker image
 
 **Files:**
+
 - Create: `Dockerfile`
 - Create: `.dockerignore`
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Consumes: `package-lock.json`, TypeScript source, and the existing CLI entry point
 - Produces: `team-relay-mcp:test`, with entry point `node /app/dist/cli/main.js`, working directory `/workspace`, and default argument `serve`
 
@@ -156,10 +160,12 @@ git commit -m "build: add a production Docker image"
 ### Task 3: Exercise MCP over the container's stdio
 
 **Files:**
+
 - Create: `scripts/docker-smoke.mjs`
 - Modify: `scripts/smoke.mjs`
 
 **Interfaces:**
+
 - Consumes: the Docker image name passed as `process.argv[2]`
 - Produces: `npm run docker:smoke`, which runs the packaged CLI help and the existing MCP handshake/tool checks through `docker run -i`
 
@@ -214,10 +220,12 @@ git commit -m "test: exercise MCP through Docker stdio"
 ### Task 4: Gate artifacts in CI and publish releases
 
 **Files:**
+
 - Modify: `.github/workflows/ci.yml`
 - Create: `.github/workflows/release.yml`
 
 **Interfaces:**
+
 - Consumes: npm scripts from Tasks 1-3 and `vMAJOR.MINOR.PATCH` Git tags
 - Produces: PR artifact checks, OIDC npm releases, and multi-platform GHCR images
 
@@ -269,9 +277,11 @@ git commit -m "ci: publish npm and GHCR releases"
 ### Task 5: Document npm, Docker, and owner release flows
 
 **Files:**
+
 - Modify: `README.md`
 
 **Interfaces:**
+
 - Consumes: final commands and artifact names from Tasks 1-4
 - Produces: matching Korean and English installation, container, and maintainer instructions
 
@@ -321,9 +331,11 @@ git commit -m "docs: explain npm and Docker releases"
 ### Task 6: Final verification and review
 
 **Files:**
+
 - Review: all files changed since `415e4ba`
 
 **Interfaces:**
+
 - Consumes: all implementation tasks
 - Produces: a reviewed branch with evidence for every design requirement
 
