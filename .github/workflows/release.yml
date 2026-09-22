@@ -118,3 +118,42 @@ jobs:
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
+
+  publish-github-release:
+    needs: [publish-npm, publish-container]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "$RELEASE_TAG already has a GitHub Release; skipping"
+            exit 0
+          fi
+
+          version="${RELEASE_TAG#v}"
+          cat > release-notes.md <<EOF
+          ## Install
+
+          \`\`\`bash
+          npm install -g team-relay-mcp@$version
+          \`\`\`
+
+          \`\`\`bash
+          docker pull ghcr.io/$GITHUB_REPOSITORY:$version
+          \`\`\`
+
+          - npm: https://www.npmjs.com/package/team-relay-mcp/v/$version
+          - Container: https://github.com/$GITHUB_REPOSITORY/pkgs/container/team-relay-mcp
+          - Platforms: \`linux/amd64\`, \`linux/arm64\`
+          EOF
+
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$RELEASE_TAG" \
+            --notes-file release-notes.md

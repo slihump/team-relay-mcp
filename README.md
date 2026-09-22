@@ -373,9 +373,10 @@ npm run typecheck
 
 ### 유지관리자 릴리스
 
-현재 `v1.0.1` 태그, npm 패키지, 공개 GHCR 이미지가 배포되었습니다. 최초
-npm 게시에는 GitHub OIDC provenance가 붙지 않았으며, 이후 태그 릴리스에는
-자동으로 붙습니다.
+현재 [`v1.0.1` GitHub Release](https://github.com/slihump/team-relay-mcp/releases/tag/v1.0.1),
+npm 패키지, 공개 GHCR 이미지가 배포되었습니다. `v1.0.1` npm 패키지는
+GitHub Actions가 OIDC Trusted Publisher로 게시했으며 레지스트리 attestation에
+SLSA provenance가 포함되어 있습니다.
 
 npm 패키지는 다음 Trusted Publisher 설정을 사용합니다.
 
@@ -384,9 +385,10 @@ npm 패키지는 다음 Trusted Publisher 설정을 사용합니다.
 - Workflow filename: `release.yml`
 - Allowed actions: `npm publish` 허용
 
-OIDC 게시가 확인되면 npm의 Publishing access를 **Require two-factor
+OIDC 게시가 확인되었으므로 npm의 Publishing access를 **Require two-factor
 authentication and disallow tokens**로 변경할 수 있습니다. 다음 릴리스부터
-버전을 올리고 동일한 버전 태그를 푸시하면 npm과 GHCR이 함께 게시됩니다.
+버전을 올리고 동일한 버전 태그를 푸시하면 npm, GHCR, GitHub Release가 함께
+게시됩니다.
 
 ```bash
 npm version patch --no-git-tag-version
@@ -760,9 +762,10 @@ To point a local Claude Code at the built server before publishing:
 
 ### Maintainer releases
 
-The `v1.0.1` tag, npm package, and public GHCR image have been released. The
-initial npm publication does not carry GitHub OIDC provenance; later tagged
-releases add it automatically.
+The [`v1.0.1` GitHub Release](https://github.com/slihump/team-relay-mcp/releases/tag/v1.0.1),
+npm package, and public GHCR image have been published. GitHub Actions published
+the `v1.0.1` npm package through its OIDC Trusted Publisher, and the registry
+attestation includes SLSA provenance.
 
 The npm package uses this Trusted Publisher configuration:
 
@@ -771,9 +774,10 @@ The npm package uses this Trusted Publisher configuration:
 - Workflow filename: `release.yml`
 - Allowed actions: allow `npm publish`
 
-After verifying OIDC publication, npm Publishing access can be changed to
+OIDC publication is verified, so npm Publishing access can be changed to
 **Require two-factor authentication and disallow tokens**. For later releases,
-bump the version and push the matching tag to publish npm and GHCR together:
+bump the version and push the matching tag to publish npm, GHCR, and a GitHub
+Release together:
 
 ```bash
 npm version patch --no-git-tag-version
