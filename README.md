@@ -53,8 +53,8 @@ Discord나 Telegram에 연결하고,
 
 ## 설치
 
-> **배포 상태:** `team-relay-mcp@1.0.0`은 npm에 공개되어 있습니다. Docker
-> `v1.0.0`도 GHCR에 공개되어 있으며 `linux/amd64`와 `linux/arm64`를
+> **배포 상태:** `team-relay-mcp@1.0.1`은 npm에 공개되어 있습니다. Docker
+> `v1.0.1`도 GHCR에 공개되어 있으며 `linux/amd64`와 `linux/arm64`를
 > 지원합니다.
 
 ```bash
@@ -373,7 +373,7 @@ npm run typecheck
 
 ### 유지관리자 릴리스
 
-현재 `v1.0.0` 태그, npm 패키지, 공개 GHCR 이미지가 배포되었습니다. 최초
+현재 `v1.0.1` 태그, npm 패키지, 공개 GHCR 이미지가 배포되었습니다. 최초
 npm 게시에는 GitHub OIDC provenance가 붙지 않았으며, 이후 태그 릴리스에는
 자동으로 붙습니다.
 
@@ -391,13 +391,13 @@ authentication and disallow tokens**로 변경할 수 있습니다. 다음 릴�
 ```bash
 npm version patch --no-git-tag-version
 git add package.json package-lock.json
-git commit -m "chore(release): 1.0.1"
-git tag -a v1.0.1 -m "v1.0.1"
+git commit -m "chore(release): 1.0.2"
+git tag -a v1.0.2 -m "v1.0.2"
 git push origin main
-git push origin v1.0.1
+git push origin v1.0.2
 ```
 
-GHCR `v1.0.0`은 이미 **Public**이며 익명 pull과 원격 이미지 MCP 스모크
+GHCR `v1.0.1`은 **Public**이며 익명 pull과 원격 이미지 MCP 스모크
 테스트를 통과했습니다. 게시된 이미지와 태그는
 [GitHub Packages](https://github.com/slihump/team-relay-mcp/pkgs/container/team-relay-mcp)에서
 확인할 수 있습니다.
@@ -449,7 +449,7 @@ usually off and makes sure nothing is lost when they come back.
 
 ## Install
 
-> **Release status:** `team-relay-mcp@1.0.0` is public on npm. Docker `v1.0.0`
+> **Release status:** `team-relay-mcp@1.0.1` is public on npm. Docker `v1.0.1`
 > is also public on GHCR for `linux/amd64` and `linux/arm64`.
 
 ```bash
@@ -760,7 +760,7 @@ To point a local Claude Code at the built server before publishing:
 
 ### Maintainer releases
 
-The `v1.0.0` tag, npm package, and public GHCR image have been released. The
+The `v1.0.1` tag, npm package, and public GHCR image have been released. The
 initial npm publication does not carry GitHub OIDC provenance; later tagged
 releases add it automatically.
 
@@ -778,13 +778,13 @@ bump the version and push the matching tag to publish npm and GHCR together:
 ```bash
 npm version patch --no-git-tag-version
 git add package.json package-lock.json
-git commit -m "chore(release): 1.0.1"
-git tag -a v1.0.1 -m "v1.0.1"
+git commit -m "chore(release): 1.0.2"
+git tag -a v1.0.2 -m "v1.0.2"
 git push origin main
-git push origin v1.0.1
+git push origin v1.0.2
 ```
 
-GHCR `v1.0.0` is already **Public** and has passed an anonymous pull and a remote
+GHCR `v1.0.1` is **Public** and has passed an anonymous pull and a remote
 image MCP smoke test. View its published tags in
 [GitHub Packages](https://github.com/slihump/team-relay-mcp/pkgs/container/team-relay-mcp).
 
