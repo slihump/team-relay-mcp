@@ -1,6 +1,7 @@
 # team-relay-mcp
 
 [![CI](https://github.com/slihump/team-relay-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/slihump/team-relay-mcp/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/team-relay-mcp.svg)](https://www.npmjs.com/package/team-relay-mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](package.json)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-server-8A2BE2.svg)](https://modelcontextprotocol.io)
@@ -52,13 +53,9 @@ Discord나 Telegram에 연결하고,
 
 ## 설치
 
-> **배포 상태 (2026-09-15):** Docker `v1.0.0`은 GHCR에 공개되어 있으며
-> `linux/amd64`와 `linux/arm64`를 지원합니다. npm `team-relay-mcp@1.0.0`은
-> npm 계정의 일시적인 보안 보류가 풀리는 대로 게시할 예정입니다. 예상 게시
-> 시점은 2026-09-17 23:50 KST 이후입니다. 게시 전까지는 아래 npm 명령 대신
-> Docker 설치 방법을 사용하세요.
-
-npm 게시가 완료되면 다음 명령을 사용할 수 있습니다.
+> **배포 상태:** `team-relay-mcp@1.0.0`은 npm에 공개되어 있습니다. Docker
+> `v1.0.0`도 GHCR에 공개되어 있으며 `linux/amd64`와 `linux/arm64`를
+> 지원합니다.
 
 ```bash
 npm install -g team-relay-mcp
@@ -376,25 +373,11 @@ npm run typecheck
 
 ### 유지관리자 릴리스
 
-현재 `v1.0.0` 태그와 공개 GHCR 이미지는 배포되었습니다. npm의 최초 게시만
-계정 보안 보류로 대기 중입니다. 보류가 풀리면 버전이나 태그를 새로 만들지
-말고 현재 `1.0.0`을 로컬에서 게시합니다. 로컬 게시에는 GitHub OIDC
-provenance가 붙지 않으며, 이후 태그 릴리스에는 자동으로 붙습니다.
+현재 `v1.0.0` 태그, npm 패키지, 공개 GHCR 이미지가 배포되었습니다. 최초
+npm 게시에는 GitHub OIDC provenance가 붙지 않았으며, 이후 태그 릴리스에는
+자동으로 붙습니다.
 
-```bash
-npm login
-npm run format:check
-npm run typecheck
-npm test
-npm run build
-npm run smoke
-npm run package:check
-npm publish --access public
-```
-
-`team-relay-mcp@1.0.0` 게시를 확인한 뒤 npm 패키지 설정에서 Trusted
-Publisher를 다음과 같이 등록하고, 실패했던 `v1.0.0` 릴리스의 npm 작업을
-재실행해 설정을 검증합니다.
+npm 패키지는 다음 Trusted Publisher 설정을 사용합니다.
 
 - Organization or user: `slihump`
 - Repository: `team-relay-mcp`
@@ -466,13 +449,8 @@ usually off and makes sure nothing is lost when they come back.
 
 ## Install
 
-> **Release status (2026-09-15):** Docker `v1.0.0` is public on GHCR for
-> `linux/amd64` and `linux/arm64`. npm `team-relay-mcp@1.0.0` will be published
-> after a temporary npm account security hold expires, expected after
-> 2026-09-17 23:50 KST. Use the Docker installation below until the initial npm
-> publication is available.
-
-After the npm publication completes, these commands will be available:
+> **Release status:** `team-relay-mcp@1.0.0` is public on npm. Docker `v1.0.0`
+> is also public on GHCR for `linux/amd64` and `linux/arm64`.
 
 ```bash
 npm install -g team-relay-mcp
@@ -782,26 +760,11 @@ To point a local Claude Code at the built server before publishing:
 
 ### Maintainer releases
 
-The `v1.0.0` tag and public GHCR image have been released. Only the initial npm
-publication is waiting for the account security hold to expire. When it does,
-publish the existing `1.0.0` without creating another version or tag. A local
-publish does not carry GitHub OIDC provenance; later tagged releases add it
-automatically.
+The `v1.0.0` tag, npm package, and public GHCR image have been released. The
+initial npm publication does not carry GitHub OIDC provenance; later tagged
+releases add it automatically.
 
-```bash
-npm login
-npm run format:check
-npm run typecheck
-npm test
-npm run build
-npm run smoke
-npm run package:check
-npm publish --access public
-```
-
-After confirming `team-relay-mcp@1.0.0` on npm, add a Trusted Publisher in the
-package settings and rerun the failed npm job from the `v1.0.0` release to
-verify the configuration:
+The npm package uses this Trusted Publisher configuration:
 
 - Organization or user: `slihump`
 - Repository: `team-relay-mcp`
